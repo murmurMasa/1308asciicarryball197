@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ボール運び</title>
+<script src="three.js"></script>
+<script src="cannon.js"></script>
+<script>
+let scene, camera, renderer;                //シーン、カメラ、レンダラー
+let width, height, dir = 0;                 //幅、高さ、カメラの方向（4方向:0～3）
+let world, ball;                            //物理ワールド、ボール
+
+const init = () => {
+    //画面サイズを取得（幅と高さを補正）
+    width = window.innerWidth - 20;
+    height = window.innerHeight - 120;
+    //シーン
+    scene = new THREE.Scene();
+    //カメラ（画角：50、ニアクリップ：１，ファークリップ：１００）
+    camera = new THREE.PerspectiveCamera(50, width/height, 1, 100);
+    camera.position.set(20, 10, 0);                                     //カメラの位置
+    camera.lookAt(scene.position);                                      //カメラは原点を向く
+    //レンダラー
+    renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(width, height);
+    renderer.shadowMap.enabled = true;
+    document.getElementById("renderArea").appendChild(renderer.domElement); //描画エリアに作成
+    //ライト（平行光源、環境光）
+    const light = new THREE.DirectionalLight("#FFFFFF");                    //白色の平行光源
+    light.position.set(10, 20, 10);
+    light.casetShadow = true;                                               //影を落とす
+    light.shadow.camera.top = 20;                                           //影の描画範囲を広くする
+    light.shadow.camera.bottom = -20;
+    light.shadow.camera.left = -20;
+    light.shadow.camera.right = 20;
+    light.shadow.mapSize.width = 2048;                                      //影の描画を細かくする
+    light.shadow.mapSize.height = 2048;
+    scene.add(light);
+    const ambientLight = new THREE.AmbientLight("#666666");                 //グレーの環境光
+    scene.add(ambientLight);
+    //物理ワールドの設定
+    world = new CANNON.World();
+    world.gravity.set(0, -9, 9, 0);                                         //重力加速度を設定
+    world.broadphase = new CANNON.NaiveBroadphase();
+}
